@@ -11,8 +11,7 @@ function App() {
 
     const getItems = async () => {
         const response = await fetch(API)
-        const data = await response.json()
-        setItems(data)
+        setItems(await response.json())
     }
 
     useEffect(() => {
@@ -22,28 +21,28 @@ function App() {
     const saveItem = async (e) => {
         e.preventDefault()
 
-        if (!name.trim() || price === "") {
+        if (!name || price === "") {
             alert("Enter name and price")
             return
         }
 
-        const url = editId ? `${API}/${editId}` : API
-
-        await fetch(url, {
-            method: editId ? "PUT" : "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name,
-                price: Number(price)
-            })
-        })
+        await fetch(
+            editId ? `${API}/${editId}` : API,
+            {
+                method: editId ? "PUT" : "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name,
+                    price: Number(price)
+                })
+            }
+        )
 
         setName("")
         setPrice("")
         setEditId(null)
-
         getItems()
     }
 
@@ -64,127 +63,93 @@ function App() {
     }
 
     return (
-        <div className="page">
+        <div className="wrapper">
 
-            <header>
-                <div>
-                    <small>CRUD APPLICATION</small>
-                    <h1>Item Manager</h1>
-                </div>
+            <div className="title">
+                <h1>Products</h1>
+                <p>Simple item management</p>
+            </div>
 
-                <div className="count">
-                    <b>{items.length}</b>
-                    <span>Items</span>
-                </div>
-            </header>
+            <form className="add-form" onSubmit={saveItem}>
 
-            <main>
+                <input
+                    placeholder="Item name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
 
-                <section className="form-section">
+                <input
+                    type="number"
+                    placeholder="Price"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                />
 
-                    <h2>
-                        {editId ? "Edit Item" : "Add New Item"}
-                    </h2>
+                <button>
+                    {editId ? "Save Changes" : "Add Item"}
+                </button>
 
-                    <p>
-                        {editId
-                            ? "Update the selected item."
-                            : "Enter the details of your new item."}
-                    </p>
+            </form>
 
-                    <form onSubmit={saveItem}>
+            {editId && (
+                <button
+                    className="cancel-edit"
+                    onClick={() => {
+                        setEditId(null)
+                        setName("")
+                        setPrice("")
+                    }}
+                >
+                    Cancel editing
+                </button>
+            )}
 
-                        <label>Item Name</label>
+            <div className="grid">
 
-                        <input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Laptop"
-                        />
+                {items.map((item) => (
 
-                        <label>Price</label>
+                    <div className="card" key={item.id}>
 
-                        <input
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            placeholder="e.g. 50000"
-                        />
-
-                        <button>
-                            {editId ? "Update Item" : "Add Item"}
-                        </button>
-
-                        {editId && (
-                            <button
-                                type="button"
-                                className="cancel"
-                                onClick={() => {
-                                    setEditId(null)
-                                    setName("")
-                                    setPrice("")
-                                }}
-                            >
-                                Cancel
-                            </button>
-                        )}
-
-                    </form>
-
-                </section>
-
-                <section className="list-section">
-
-                    <h2>Items</h2>
-
-                    {items.length === 0 ? (
-                        <div className="empty">
-                            No items added yet.
+                        <div className="card-top">
+                            <span>#{item.id}</span>
+                            <span>ITEM</span>
                         </div>
-                    ) : (
 
-                        items.map((item) => (
-                            <div className="item" key={item.id}>
+                        <h2>{item.name}</h2>
 
-                                <div className="item-id">
-                                    #{item.id}
-                                </div>
+                        <div className="price">
+                            ₹{item.price}
+                        </div>
 
-                                <div className="item-details">
-                                    <h3>{item.name}</h3>
-                                    <span>Product</span>
-                                </div>
+                        <div className="buttons">
 
-                                <strong>
-                                    ₹{item.price}
-                                </strong>
+                            <button
+                                onClick={() => editItem(item)}
+                                className="edit"
+                            >
+                                Edit
+                            </button>
 
-                                <div className="actions">
+                            <button
+                                onClick={() => deleteItem(item.id)}
+                                className="delete"
+                            >
+                                Delete
+                            </button>
 
-                                    <button
-                                        onClick={() => editItem(item)}
-                                        className="edit"
-                                    >
-                                        Edit
-                                    </button>
+                        </div>
 
-                                    <button
-                                        onClick={() => deleteItem(item.id)}
-                                        className="delete"
-                                    >
-                                        Delete
-                                    </button>
+                    </div>
 
-                                </div>
+                ))}
 
-                            </div>
-                        ))
+            </div>
 
-                    )}
-
-                </section>
-
-            </main>
+            {items.length === 0 && (
+                <div className="empty">
+                    No products available.
+                </div>
+            )}
 
         </div>
     )
